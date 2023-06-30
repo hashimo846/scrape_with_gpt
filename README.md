@@ -25,3 +25,13 @@ Webページからスクレイピングした情報を元に、更にChatGPTを�
 * MEDEL_NUMBER:抽出対象の製品の型番（型番がない商品は''を入力）
 * INPUT_TEXT：入力テキスト（API制限等でスクレイピングできないときに入力）
 * PROMPT_LIMIT：1プロンプトあたりの上限の文字数
+
+## openai_api_sample.py
+OpenAIのAPIの動作を確認するスクリプト。
+
+実行するには、事前に環境変数の設定が必要。
+```shell
+export OPENAI_ORGANIZATION="Organization ID"
+export OPENAI_API_KEY="API Key"
+```
+実行すると、質問に対する回答が出力される。
