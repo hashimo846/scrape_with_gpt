@@ -48,7 +48,8 @@ def str_question(model_number = MODEL_NUMBER, item = None, is_summary = IS_SUMMA
     text += '入力のみを用いて、'
     if MODEL_NUMBER != '': 
         text += '製品' + model_number + 'の情報から、'
-    text += item['item'] + 'を選択肢から複数選択し、出力形式に従ってJSONで出力してください。\n'
+    text += item['item'] + 'を選択肢の中から複数選択し、出力形式に従ってJSONで出力してください。\n'
+    text += 'もし選択肢の中に該当するものがない場合は、出力形式に従って空の文字列をJSONで出力してください。\n'
     if not is_summary:
         text += 'また、入力の文が長いのため、<end>というまで出力を生成しないでください。\n'
         text += '<end>というまでは<ok>とだけ返答してください。\n'
