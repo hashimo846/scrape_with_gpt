@@ -28,7 +28,7 @@ docker-compose exec python3 python3 <実行したいスクリプト>
 ```
 
 # スクリプトの説明
-## scrape_extract.py
+## scrape_data.py
 実行すると、指定したWebページからスクレイピングした情報を元に、GPTにて対象の情報を抽出するためのプロンプトを生成する。
 
 実行に必要なパラメータは次である。
