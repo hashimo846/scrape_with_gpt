@@ -17,7 +17,7 @@ docker-compose up -d
 `requirements.txt`、`.env`、`Dockerfile`、`docker-compose.yml`を変更したときは、次のコマンドにより一度コンテナを削除してビルド。
 ```shell
 docker-compose down
-docker-compose build
+docker-compose build --no-cache #少し時間がかかる
 docker-compose up -d
 ```
 
