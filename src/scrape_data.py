@@ -1,5 +1,7 @@
+
 import requests
 from bs4 import BeautifulSoup
+
 
 # 商品ページのURL
 HTML_URL = 'https://www.jalan.net/yad389188/'
