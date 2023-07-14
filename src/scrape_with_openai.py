@@ -43,8 +43,9 @@ def str_template(model_number:str, is_service = False):
     if model_number != None: 
         template += '製品' + model_number + 'の'
     else:
-        template += '製品の'
-    template += '詳細・性能を示す情報や、定量的な数値情報を抽出してください。\n\n'
+        template += 'ホテルの'
+    template += '仕様や性能を示す情報を抽出してください。\n'
+    template += 'ただし、定量的な数値情報や固有名詞は可能は限り出力に含めてください。\n\n'
     template += '#入力\n{}'
     return template
 
