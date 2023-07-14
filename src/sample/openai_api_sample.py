@@ -37,6 +37,7 @@ def send_prompts(prompts=[]):
 
 def main():
     authentication_openai() 
+    str_model_list()
     print(send_prompts(prompts = PROMPTS))
     
 if __name__ == '__main__':
