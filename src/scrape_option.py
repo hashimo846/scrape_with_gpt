@@ -1,10 +1,13 @@
-import requests
-from bs4 import BeautifulSoup
+from src import scrape_with_openai
+from typing import List, Dict
+from langchain.text_splitter import TokenTextSplitter
+import openai
+import os
 
 # 商品ページのURL
 HTML_URL = 'https://www.katoji-onlineshop.com/c/category/babygate/63423'
 # 型番
-MODEL_NUMBER = ''
+MODEL_NUMBER = None
 # 抽出項目（数値、文字列）
 ITEM_LIST = [
     {'item':'素材', 'option':['スチール製','プラスチック製','木製']},
@@ -16,91 +19,118 @@ ITEM_LIST = [
 ]
 # 入力テキスト（API制限等によりスクレイピングできないときに入力）
 INPUT_TEXT = ''
-# 要約した入力テキストかどうか
-IS_SUMMARY = False
-# 1プロンプトあたりの上限の文字数
-PROMPT_LIMIT = 2300
+# 1プロンプトに含む入力のトークン数の上限
+INPUT_TOKEN_LIMIT = 3000
 # 1プロンプトあたりの抽出項目数
 ITEM_LIMIT = 4
 
-def scrape_all(url = HTML_URL, input_text = INPUT_TEXT):
-    # URLからページを取得
-    with requests.get(url) as r:
-        html = BeautifulSoup(r.content, 'html.parser')
-    # ページから文字列を抽出 or 引数から文字列を抽出
-    if input_text == '':
-        text = html.text
-    else:
-        text = input_text
-    # テキストのみ抽出
-    text = ''.join(text.split(' '))
-    text = ''.join(text.split('　'))
-    text = ''.join(text.split('\n'))
-    text = ''.join(text.split('\t'))
-    text = ''.join(text.split('\r'))
-    text = ''.join(text.split('\v'))
-    text = ''.join(text.split('\f'))
-    return text
-
-def str_question(model_number = MODEL_NUMBER, item = None, is_summary = IS_SUMMARY):
+def str_question(item:Dict, is_multi_prompt:bool) -> str:
     text = '今から入力、選択肢、期待する出力形式を与えます。\n'
     text += '入力のみを用いて、'
-    if MODEL_NUMBER != '': 
-        text += '製品' + model_number + 'の情報から、'
     text += item['item'] + 'を選択肢の中から複数選択し、出力形式に従ってJSONで出力してください。\n'
     text += 'もし選択肢の中に該当するものがない場合は、出力形式に従って空の文字列をJSONで出力してください。\n'
-    if not is_summary:
+    if is_multi_prompt:
         text += 'また、入力の文が長いのため、<end>というまで出力を生成しないでください。\n'
         text += '<end>というまでは<ok>とだけ返答してください。\n'
     return text
 
-def str_option(item = None):
+def str_option(item:Dict) -> str:
     text = '#選択肢\n'
     text += '、'.join(item['option']) + '\n'
     return text
 
-def str_format(item = None):
+def str_format(item:Dict) -> str:
     text = '#出力形式\n'
     text += '{\"' + item['item'] +'\":[\"\",\"\"]}' + '\n'
     return text
 
-def str_output(is_summary = IS_SUMMARY):
+def str_output(is_multi_prompt:bool) -> str:
     text = '#出力'
-    if not is_summary:
+    if is_multi_prompt:
         text += '\n<end>'
     return text
 
-def str_input(input_text):
+def str_input(input_text:str) -> str:
     text = '#入力\n'
     text += input_text + '\n'
     return text
 
-def str_prompt(item = None):
-    input_text = scrape_all()
-    prompt_text = '\n'.join([
-        str_question(item=item), 
-        str_option(item=item),
-        str_format(item=item), 
-        str_input(input_text),
-        str_output(),
-    ])
-    return prompt_text
-
-def split_prompt(prompt, prompt_limit=PROMPT_LIMIT):
-    prompt_list = []
-    start_idx = 0
-    while start_idx < len(prompt):
-        end_idx = start_idx + prompt_limit
-        prompt_list.append(prompt[start_idx:end_idx])
-        start_idx = end_idx
-    return prompt_list
+def str_prompts(item:Dict, input_texts:List[str]) -> List[str]:
+    is_multi_prompt = 1 < len(input_texts)
+    prompts_list = []
     
+    if is_multi_prompt:
+        # first prompt
+        prompt_text = '\n'.join([
+            str_question(item, is_multi_prompt), 
+            str_option(item),
+            str_format(item), 
+            str_input(input_texts[0]),
+        ])
+        prompts_list.append(prompt_text)
+        # intermediate prompts
+        for input_text in input_texts[1:-1]:
+            prompts_list.append(input_text)
+        # last prompt
+        prompt_text = '\n'.join([
+            input_texts[-1] + '\n',
+            str_output(is_multi_prompt),
+        ])
+        prompts_list.append(prompt_text)
+    else:
+        # only one prompt
+        prompt_text = '\n'.join([
+            str_question(item, is_multi_prompt), 
+            str_option(item),
+            str_format(item), 
+            str_input(input_texts[0]),
+            str_output(is_multi_prompt),
+        ])
+        prompts_list.append(prompt_text)
+    return prompts_list
+
+# 入力を決められたトークン数ごとに分割する
+def split_input_text(input_text:str, prompt_token_limit:int) -> List[str]:
+    text_splitter = TokenTextSplitter(chunk_size=prompt_token_limit, chunk_overlap=0)
+    texts = text_splitter.split_text(input_text)
+    return texts
+
+# OpenAI APIの認証
+def authentication_openai():
+    openai.organization = os.getenv("OPENAI_ORGANIZATION")
+    openai.api_key = os.getenv("OPENAI_API_KEY")
+
+# プロンプトを送信して回答を取得
+def send_prompt(prompts):
+    # make messages
+    messages = [{'role':'user', 'content':prompts[0]}]
+    for prompt in prompts[1:]:
+        messages.append({'role':'assistant', 'content':'<ok>'})
+        messages.append({'role':'user', 'content':prompt})
+
+    # send prompt
+    response = openai.ChatCompletion.create(
+        model = 'gpt-3.5-turbo',
+        messages = messages
+    )
+    return response.choices[0]['message']['content'].strip()
+
 def main():
-    for chat_count in range(len(ITEM_LIST)):
-        print('\n\n#####Chat {}#######\n\n'.format(chat_count+1))
-        prompt = str_prompt(item = ITEM_LIST[chat_count])
-        prompt_list = split_prompt(prompt)
-        print('\n\n##################\n\n'.join(prompt_list))
+    input_text = scrape_with_openai.scrape(url=HTML_URL, model_number=MODEL_NUMBER, input_text=None)
+    split_inputs = split_input_text(input_text, INPUT_TOKEN_LIMIT)
+    authentication_openai()
+    
+    for item in ITEM_LIST:
+        print('\n\n####### {} #######\n\n'.format(item['item']))
+
+        prompts = str_prompts(item, split_inputs)
+        
+        print('\n\n#####\n\n'.join(prompts))
+
+        print('\n\n##### answer #####\n\n')
+
+        print(send_prompt(prompts))
+        
 
 if __name__ == '__main__':
     main()
