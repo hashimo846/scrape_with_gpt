@@ -1,22 +1,13 @@
-from src import scrape_with_openai
-from typing import List, Dict
 from langchain.text_splitter import TokenTextSplitter
-import openai
-import os
+from src import openai_handler
+from typing import List, Dict
 
-# 入力テキスト（API制限等によりスクレイピングできないときに入力）（必要ないときはNoneを代入してください）
-INPUT_TEXT = None
-# 商品ページのURL
-HTML_URL = 'https://www.jalan.net/yad389188/'
-# 型番
-MODEL_NUMBER = None
-# 抽出項目
-ITEM_LIST = ['無料Wi-Fi','部屋食','朝食あり','夕食あり','素泊まり','プール付き','ペット同伴可','バリアフリー対応','日帰り利用','記念日プラン']
 # 1プロンプトに含む入力のトークン数の上限
 INPUT_TOKEN_LIMIT = 3000
 # OPTION
 OPTION = ['該当する', '該当しない', '不明']
 
+# プロンプト中の質問部分の文字列を返す
 def str_question(item:Dict, is_multi_prompt:bool) -> str:
     text = '今から入力、選択肢、期待する出力形式を与えます。\n'
     text += '入力のみを用いて、'
@@ -27,28 +18,33 @@ def str_question(item:Dict, is_multi_prompt:bool) -> str:
         text += '<end>というまでは<ok>とだけ返答してください。\n'
     return text
 
+# プロンプト中の選択肢部分の文字列を返す
 def str_option(option = OPTION) -> str:
     text = '#選択肢\n'
     text += '- '
     text += '\n- '.join(option) + '\n'
     return text
 
+# プロンプト中の出力形式部分の文字列を返す
 def str_format(item:str) -> str:
     text = '#出力形式\n'
     text += '{\"' + '出力' +'\":\"\"}' + '\n'
     return text
 
+# プロンプト中の出力部分の文字列を返す
 def str_output(is_multi_prompt:bool) -> str:
     text = '#出力'
     if is_multi_prompt:
         text += '\n<end>'
     return text
 
+# プロンプト中の入力部分の文字列を返す
 def str_input(input_text:str) -> str:
     text = '#入力\n'
     text += input_text + '\n'
     return text
 
+# 生成したプロンプトのリスト返す
 def str_prompts(item:str, input_texts:List[str]) -> List[str]:
     is_multi_prompt = 1 < len(input_texts)
     prompts_list = []
@@ -83,31 +79,15 @@ def str_prompts(item:str, input_texts:List[str]) -> List[str]:
         prompts_list.append(prompt_text)
     return prompts_list
 
-# 入力を決められたトークン数ごとに分割する
-def split_input_text(input_text:str, prompt_token_limit:int) -> List[str]:
-    text_splitter = TokenTextSplitter(chunk_size=prompt_token_limit, chunk_overlap=0)
-    texts = text_splitter.split_text(input_text)
-    return texts
+# 対象項目の情報を抽出
+def extract(split_inputs:List[str], model_number:str, items:List[Dict]) -> List[str]:
+    answers = []
+    for item in items:
+        prompts = str_prompts(item, split_inputs)
+        openai_handler.authentication()
+        answers.append(openai_handler.send(prompts))
+    return answers
 
-# OpenAI APIの認証
-def authentication_openai():
-    openai.organization = os.getenv("OPENAI_ORGANIZATION")
-    openai.api_key = os.getenv("OPENAI_API_KEY")
-
-# プロンプトを送信して回答を取得
-def send_prompt(prompts):
-    # make messages
-    messages = [{'role':'user', 'content':prompts[0]}]
-    for prompt in prompts[1:]:
-        messages.append({'role':'assistant', 'content':'<ok>'})
-        messages.append({'role':'user', 'content':prompt})
-
-    # send prompt
-    response = openai.ChatCompletion.create(
-        model = 'gpt-3.5-turbo',
-        messages = messages
-    )
-    return response.choices[0]['message']['content'].strip()
 
 def main():
     input_text = scrape_with_openai.scrape(url=HTML_URL, model_number=MODEL_NUMBER, input_text=INPUT_TEXT)
