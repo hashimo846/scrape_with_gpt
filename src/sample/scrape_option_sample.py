@@ -1,14 +1,19 @@
-
 import requests
 from bs4 import BeautifulSoup
 
-
 # 商品ページのURL
-HTML_URL = 'https://www.jalan.net/yad389188/'
+HTML_URL = 'https://www.katoji-onlineshop.com/c/category/babygate/63423'
 # 型番
 MODEL_NUMBER = ''
 # 抽出項目（数値、文字列）
-ITEM_LIST = ['最寄り駅', '周辺観光', 'チェックイン', 'チェックアウト', '料金']
+ITEM_LIST = [
+    {'item':'素材', 'option':['スチール製','プラスチック製','木製']},
+    {'item':'ゲート種類', 'option':['扉','ロール','フェンス','置き型']},
+    {'item':'ロック方法', 'option':['オートロック','ダブルロック']},
+    {'item':'開閉方式', 'option':['両開き','片開き']},
+    {'item':'設置方式', 'option':['壁取り付けタイプ（突っ張り式）','壁取り付けタイプ（ねじ式）','自立タイプ']},
+    {'item':'適合基準', 'option':['SGマーク']},
+]
 # 入力テキスト（API制限等によりスクレイピングできないときに入力）
 INPUT_TEXT = ''
 # 要約した入力テキストかどうか
@@ -37,21 +42,26 @@ def scrape_all(url = HTML_URL, input_text = INPUT_TEXT):
     text = ''.join(text.split('\f'))
     return text
 
-def str_question(model_number = MODEL_NUMBER, item_list = ITEM_LIST, is_summary = IS_SUMMARY):
-    text = '今から入力と期待する出力形式を与えます。\n'
-    text += '入力の情報のみを用いて、'
+def str_question(model_number = MODEL_NUMBER, item = None, is_summary = IS_SUMMARY):
+    text = '今から入力、選択肢、期待する出力形式を与えます。\n'
+    text += '入力のみを用いて、'
     if MODEL_NUMBER != '': 
-        text += '製品' + model_number + 'の'
-    text += '、'.join(item_list)
-    text += 'の情報を抜き出し、出力形式に従ってJSONで出力してください。\n'
+        text += '製品' + model_number + 'の情報から、'
+    text += item['item'] + 'を選択肢の中から複数選択し、出力形式に従ってJSONで出力してください。\n'
+    text += 'もし選択肢の中に該当するものがない場合は、出力形式に従って空の文字列をJSONで出力してください。\n'
     if not is_summary:
         text += 'また、入力の文が長いのため、<end>というまで出力を生成しないでください。\n'
         text += '<end>というまでは<ok>とだけ返答してください。\n'
     return text
 
-def str_format(item_list = ITEM_LIST):
+def str_option(item = None):
+    text = '#選択肢\n'
+    text += '、'.join(item['option']) + '\n'
+    return text
+
+def str_format(item = None):
     text = '#出力形式\n'
-    text += '{\"' + '\":\"\",\"'.join(item_list) + '\":\"\"}' + '\n'
+    text += '{\"' + item['item'] +'\":[\"\",\"\"]}' + '\n'
     return text
 
 def str_output(is_summary = IS_SUMMARY):
@@ -65,9 +75,15 @@ def str_input(input_text):
     text += input_text + '\n'
     return text
 
-def str_prompt(item_list = ITEM_LIST):
+def str_prompt(item = None):
     input_text = scrape_all()
-    prompt_text = '\n'.join([str_question(item_list=item_list), str_input(input_text), str_format(item_list=item_list), str_output()])
+    prompt_text = '\n'.join([
+        str_question(item=item), 
+        str_option(item=item),
+        str_format(item=item), 
+        str_input(input_text),
+        str_output(),
+    ])
     return prompt_text
 
 def split_prompt(prompt, prompt_limit=PROMPT_LIMIT):
@@ -80,14 +96,11 @@ def split_prompt(prompt, prompt_limit=PROMPT_LIMIT):
     return prompt_list
     
 def main():
-    item_idx = chat_count = 0
-    while item_idx < len(ITEM_LIST):
-        chat_count += 1
-        print('\n\n#####Chat {}#######\n\n'.format(chat_count))
-        prompt = str_prompt(item_list = ITEM_LIST[item_idx:item_idx+ITEM_LIMIT])
+    for chat_count in range(len(ITEM_LIST)):
+        print('\n\n#####Chat {}#######\n\n'.format(chat_count+1))
+        prompt = str_prompt(item = ITEM_LIST[chat_count])
         prompt_list = split_prompt(prompt)
         print('\n\n##################\n\n'.join(prompt_list))
-        item_idx += ITEM_LIMIT
 
 if __name__ == '__main__':
     main()

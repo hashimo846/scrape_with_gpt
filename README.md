@@ -17,14 +17,14 @@ docker-compose up -d
 `requirements.txt`、`.env`、`Dockerfile`、`docker-compose.yml`を変更したときは、次のコマンドにより一度コンテナを削除してビルド。
 ```shell
 docker-compose down
-docker-compose build
+docker-compose build --no-cache #少し時間がかかる
 docker-compose up -d
 ```
 
 # スクリプトの実行方法
-仮想環境内はデフォルトで`src/`直下に移動しているので、次のコマンドで各スクリプトを実行できる。
+仮想環境内はデフォルトで`/root`直下に移動しているので、次のコマンドで各スクリプトを実行できる。
 ```shell
-docker-compose exec python3 python3 <実行したいスクリプト>
+docker-compose exec python3 python3 -m src.<実行したいスクリプト名（.pyを除く）>
 ```
 
 # スクリプトの説明

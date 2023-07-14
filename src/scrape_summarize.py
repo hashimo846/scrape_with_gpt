@@ -2,7 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 
 # 商品ページのURL
-HTML_URL = 'https://www.solarehotels.com/hotel/tochigi/chisuninn-kanuma/'
+HTML_URL = 'https://www.katoji-onlineshop.com/c/category/babygate/63423'
 # 型番
 MODEL_NUMBER = ''
 # 入力テキスト（API制限等によりスクレイピングできないときに入力）
@@ -30,7 +30,7 @@ def scrape_all(url = HTML_URL, input_text = INPUT_TEXT):
     return text
 
 def str_question(model_number = MODEL_NUMBER):
-    text = '今から与える入力を、2000文字以内に要約せよ。\n'
+    text = '今から与える入力を、2000文字程度に要約せよ。\n'
     text += '要約には'
     if MODEL_NUMBER != '': 
         text += '製品' + model_number + 'の'
