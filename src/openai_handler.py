@@ -1,5 +1,9 @@
 import openai
 import os
+from typing import List
+
+#使用するAIモデル
+MODEL = os.getenv("OPENAI_MODEL")
 
 # OpenAI APIの認証
 def authentication() -> None:
@@ -16,7 +20,7 @@ def send(prompts:List[str]) -> str:
 
     # send prompt
     response = openai.ChatCompletion.create(
-        model = 'gpt-3.5-turbo',
+        model = MODEL,
         messages = messages
     )
     return response.choices[0]['message']['content'].strip()

@@ -10,3 +10,4 @@ services:
       - ./src:/root/src
     env_file:
       - .env
+      - .env.config

@@ -22,9 +22,12 @@ OPTION_ITEMS = [
 def main():
     full_text = scrape.scrape_all_text(url = URL, input_text=INPUT_TEXT)
     summarize_text = summarize.summarize(input_text = full_text)
-    split_inputs = summarize.split_by_token(input_text = summarize_text)
-    # data_answers = extract_data.extract(split_inputs = split_inputs, model_number = MODEL_NUMBER, items = DATA_ITEMS)
-    # boolean_answers = extract_boolean.extract(split_inputs = split_inputs, model_number = MODEL_NUMBER, items = BOOLEAN_ITEMS)
+    split_inputs = summarize.split_input(input_text = summarize_text)
+    
+    data_answers = extract_data.extract(split_inputs = split_inputs, model_number = MODEL_NUMBER, items = DATA_ITEMS)
+    print('\n'.join(data_answers))
+    boolean_answers = extract_boolean.extract(split_inputs = split_inputs, model_number = MODEL_NUMBER, items = BOOLEAN_ITEMS)
+    print('\n'.join(boolean_answers))
     option_answers = extract_option.extract(split_inputs = split_inputs, model_number = MODEL_NUMBER, items = OPTION_ITEMS)
     print('\n'.join(option_answers))
 

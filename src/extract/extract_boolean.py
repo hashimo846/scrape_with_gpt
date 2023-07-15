@@ -2,8 +2,6 @@ from langchain.text_splitter import TokenTextSplitter
 from src import openai_handler
 from typing import List, Dict
 
-# 1プロンプトに含む入力のトークン数の上限
-INPUT_TOKEN_LIMIT = 3000
 # OPTION
 OPTION = ['該当する', '該当しない', '不明']
 
@@ -87,24 +85,3 @@ def extract(split_inputs:List[str], model_number:str, items:List[Dict]) -> List[
         openai_handler.authentication()
         answers.append(openai_handler.send(prompts))
     return answers
-
-
-def main():
-    input_text = scrape_with_openai.scrape(url=HTML_URL, model_number=MODEL_NUMBER, input_text=INPUT_TEXT)
-    split_inputs = split_input_text(input_text, INPUT_TOKEN_LIMIT)
-    authentication_openai()
-    
-    for item in ITEM_LIST:
-        print('\n\n####### {} #######\n\n'.format(item))
-
-        prompts = str_prompts(item, split_inputs)
-        
-        print('\n\n#####\n\n'.join(prompts))
-
-        print('\n\n##### answer #####\n\n')
-
-        print(send_prompt(prompts))
-        
-
-if __name__ == '__main__':
-    main()
