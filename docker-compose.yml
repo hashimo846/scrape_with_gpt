@@ -10,6 +10,6 @@ services:
       - ./src:/root/src
       - ./data:/root/data
     env_file:
-      - .env
-      - .env.config
-      - .env.filepath
+      - ./env_file/.env
+      - ./env_file/.env.config
+      - ./env_file/.env.filepath
