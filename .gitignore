@@ -1,3 +1,4 @@
 #api keyをアップロードしないようにするため
 .env
 __pycache__/
+gss_credential.json
