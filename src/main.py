@@ -1,7 +1,7 @@
 from src.extract import extract_boolean, extract_data, extract_option
+from src import input_handler
 from src import scrape
 from src import summarize
-
 # 商品情報
 URL = 'https://www.jalan.net/yad389188/'
 MODEL_NUMBER = None
@@ -20,15 +20,22 @@ OPTION_ITEMS = [
 
 # メインプロセス
 def main():
-    full_text = scrape.scrape_all_text(url = URL, input_text=INPUT_TEXT)
+    # get product info from input json
+    product_url, model_number, input_text = input_handler.get_product_info()
+    # get all items from master
+    items = input_handler.get_all_items()
+    # scrape all text from product url
+    full_text = scrape.scrape_all_text(url = product_url, input_text=input_text)
+    # summarize text
     summarize_text = summarize.summarize(input_text = full_text)
+    # split input by token
     split_inputs = summarize.split_input(input_text = summarize_text)
-    
-    data_answers = extract_data.extract(split_inputs = split_inputs, model_number = MODEL_NUMBER, items = DATA_ITEMS)
+    # extract each items
+    data_answers = extract_data.extract(split_inputs = split_inputs, model_number = model_number, items = items['data_items'])
+    boolean_answers = extract_boolean.extract(split_inputs = split_inputs, model_number = model_number, items = items['boolean_items'])
+    option_answers = extract_option.extract(split_inputs = split_inputs, model_number = model_number, items = items['option_items'])
     print('\n'.join(data_answers))
-    boolean_answers = extract_boolean.extract(split_inputs = split_inputs, model_number = MODEL_NUMBER, items = BOOLEAN_ITEMS)
     print('\n'.join(boolean_answers))
-    option_answers = extract_option.extract(split_inputs = split_inputs, model_number = MODEL_NUMBER, items = OPTION_ITEMS)
     print('\n'.join(option_answers))
 
 if __name__ == '__main__':

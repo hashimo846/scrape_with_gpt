@@ -11,7 +11,7 @@ def str_question(model_number:str, item_list:List[str], is_multi_prompt:bool) ->
     text += '入力の情報のみを用いて、'
     if model_number != None: 
         text += '製品' + model_number + 'の'
-    text += '、'.join(item_list)
+    text += '、'.join([item['name'] for item in item_list])
     text += 'の情報を抜き出し、出力形式に従ってJSONで出力してください。\n'
     if is_multi_prompt:
         text += 'また、入力の文が長いのため、<end>というまで出力を生成しないでください。\n'
@@ -21,7 +21,7 @@ def str_question(model_number:str, item_list:List[str], is_multi_prompt:bool) ->
 # プロンプト中の出力形式部分の文字列を返す
 def str_format(item_list:List[str]) -> str:
     text = '#出力形式\n'
-    text += '{\"' + '\":\"\",\"'.join(item_list) + '\":\"\"}' + '\n'
+    text += '{\"' + '\":\"\",\"'.join([item['name'] for item in item_list]) + '\":\"\"}' + '\n'
     return text
 
 # プロンプト中の出力部分の文字列を返す
