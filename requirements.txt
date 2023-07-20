@@ -3,5 +3,5 @@ requests
 openai
 langchain
 tiktoken
-google
+google-auth
 gspread
