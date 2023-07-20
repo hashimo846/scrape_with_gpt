@@ -8,6 +8,7 @@ services:
     tty: true
     volumes:
       - ./src:/root/src
+      - ./data:/root/data
     env_file:
       - .env
       - .env.config
