@@ -3,10 +3,10 @@ Webページからスクレイピングした情報を元に、更にChatGPTを�
 そのためのスクリプトを作成するリポジトリ。
 # 動作環境構築
 ## OpenAI APIキーの設定
-次のようにし、`.env`にAPIキー等の環境変数を設定。
+次のようにし、`env_file/.env`にAPIキー等の環境変数を設定。
 ```shell
-cp .env.template .env
-vi .env
+cp env_file/.env.template env_file/.env
+vi env_file/.env
 ```
 # OpenAI API認証設定
 GoogleのAPI設定から、サービスアカウント認証情報をJson形式でダウンロードし、`data/google_service_account.json`として保存する。
