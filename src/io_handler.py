@@ -160,6 +160,18 @@ def get_all_products() -> List:
             products.append(product)
     return products
 
+# TODO: delete this function
+def get_product_info() -> Tuple[str, str, str]:
+    # read input from json
+    input_data = read_json(INPUT_PATH)
+    # get product info
+    product_url = input_data['product_url']
+    model_number = input_data['model_number']
+    model_number = model_number if model_number != '' else None
+    input_text = input_data['input_text']
+    input_text = input_text if input_text != '' else None
+    return product_url, model_number, input_text
+
 def print_log(title:str, content:any) -> None:
     print('\n======= {} ======='.format(title))
     print(content)
