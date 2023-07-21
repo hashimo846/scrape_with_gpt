@@ -83,6 +83,5 @@ def extract(split_inputs:List[str], product_name:str, items:List[Dict]) -> List[
     answers = []
     for item in items:
         prompts = str_prompts(item, split_inputs)
-        openai_handler.authentication()
         answers.append(openai_handler.send(prompts))
     return answers

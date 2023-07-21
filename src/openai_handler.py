@@ -7,9 +7,8 @@ from typing import List
 MODEL = os.getenv("OPENAI_MODEL")
 
 # OpenAI APIの認証
-def authentication() -> None:
-    openai.organization = os.getenv("OPENAI_ORGANIZATION")
-    openai.api_key = os.getenv("OPENAI_API_KEY")
+openai.organization = os.getenv("OPENAI_ORGANIZATION")
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
 # プロンプトを送信して回答を取得
 def send(prompts:List[str]) -> str:
@@ -22,13 +21,16 @@ def send(prompts:List[str]) -> str:
     # send prompt
     while True:
         try:
-            response = openai.ChatCompletion.create(model = MODEL,messages = messages)
+            response = openai.ChatCompletion.create(model = MODEL,messages = messages, timeout = 10)
         except (openai.error.APIError, openai.error.ServiceUnavailableError, openai.error.APIConnectionError) as e:
             print('#Error: [{}]{}'.format(type(e),e))
-            sleep(5)
-            print('#Retry: send prompt')
+            sleep(1)
+            print('#Retry: プロンプト再送信中')
             continue
+        except Exception as e:
+            print('#Error: [{}]{}'.format(type(e),e))
+            sleep(1)
+            print('#Retry: プロンプト再送信中')
         else:
-            # print('Success: send prompt')
             break
     return response.choices[0]['message']['content'].strip()

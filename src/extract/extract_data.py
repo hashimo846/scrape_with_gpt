@@ -76,7 +76,6 @@ def extract(split_inputs:List[str], product_name:str, items:List[Dict]) -> List[
     item_idx = 0
     while item_idx < len(items):
         prompts = str_prompts(product_name, split_inputs, item_list = items[item_idx:item_idx+ITEM_LIMIT])
-        openai_handler.authentication()
         answers.append(openai_handler.send(prompts))
         item_idx += ITEM_LIMIT
     return answers
