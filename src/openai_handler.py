@@ -1,5 +1,6 @@
 import openai
 import os
+from time import sleep
 from typing import List
 
 #使用するAIモデル

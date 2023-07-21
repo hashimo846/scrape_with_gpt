@@ -4,30 +4,35 @@ from src import scrape
 from src import summarize
 
 def print_log(title:str, content:str) -> None:
-    print('\n======= {} ======='.format(title))
+    print('\n======= {} =======\n'.format(title))
     print(content)
 
 # メインプロセス
 def main():
-    # get product info from input json
-    product_url, model_number, input_text = io_handler.get_product_info()
     # get all items from master
     items = io_handler.get_all_items()
-    # scrape all text from product url
-    full_text = scrape.scrape_all_text(url = product_url, input_text=input_text)
-    print_log('full_text', full_text)
-    # summarize text
-    summarize_text = summarize.summarize(input_text = full_text)
-    print_log('summarize_text', summarize_text)
-    # split input by token
-    split_inputs = summarize.split_input(input_text = summarize_text)
-    # extract each items
-    data_answers = extract_data.extract(split_inputs = split_inputs, model_number = model_number, items = items['data_items'])
-    print_log('data_answers', data_answers)
-    boolean_answers = extract_boolean.extract(split_inputs = split_inputs, model_number = model_number, items = items['boolean_items'])
-    print_log('boolean_answers', boolean_answers)
-    option_answers = extract_option.extract(split_inputs = split_inputs, model_number = model_number, items = items['option_items'])
-    print_log('option_answers', option_answers)
+    # get product info from input json
+    products = io_handler.get_all_products()
+    # sample
+    products = [
+        {'jan':4974019179933, 'id':10, 'maker':'シャープ', 'name':'KI-RS40-W', 'reference_url':'https://kakaku.com/item/K0001468563/spec/#tab', 'input_text':None}
+    ]
+    for product in products:
+        # scrape all text from product url
+        full_text = scrape.scrape_all_text(url = product['reference_url'], input_text=product['input_text'])
+        print_log('Webページから取得した全文', full_text)
+        # summarize text
+        summarize_text = summarize.summarize(input_text = full_text)
+        print_log('要約文', summarize_text)
+        # split input by token
+        split_inputs = summarize.split_input(input_text = summarize_text)
+        # extract each items
+        data_answers = extract_data.extract(split_inputs = split_inputs, product_name = product['name'], items = items['data_items'])
+        print_log('データ項目の抽出結果', data_answers)
+        boolean_answers = extract_boolean.extract(split_inputs = split_inputs, product_name = product['name'], items = items['boolean_items'])
+        print_log('Boolean項目の抽出結果', boolean_answers)
+        option_answers = extract_option.extract(split_inputs = split_inputs, product_name = product['name'], items = items['option_items'])
+        print_log('複数選択項目の抽出結果', option_answers)
 
 if __name__ == '__main__':
     main()

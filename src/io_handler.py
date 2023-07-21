@@ -3,6 +3,7 @@ import google.auth.exceptions
 import gspread
 import json
 import os
+from time import sleep
 from typing import Dict, List, Tuple
 
 # constant
@@ -32,15 +33,31 @@ def get_spreadsheet(sheet_url:str) -> gspread.Spreadsheet:
     spreadsheet = gspread_client.open_by_url(sheet_url)
     return spreadsheet
 
+# get all values from worksheet in spreadsheet
+def get_table(sheet_url:str, worksheet_name:str) -> List:
+    while True:
+        try:
+            spreadsheet = get_spreadsheet(sheet_url)
+            worksheet = spreadsheet.worksheet(worksheet_name)
+            table = worksheet.get_all_values()
+        except google.auth.exceptions.TransportError as e:
+            print('#Error: [{}]{}'.format(type(e),e))
+            sleep(1)
+            print('#Retry: スプレッドシートからテーブル再取得中', end='...')
+            continue
+        else:
+            break
+    return table
+
 def get_column(table:List, idx:int) -> List:
     return [row[idx] for row in table]
 
 # get master data from spreadsheet with url
 def get_master(master_sheet_url:str) -> Dict:
-    # get master sheet
-    spreadsheet = get_spreadsheet(master_sheet_url)
-    master_sheet = spreadsheet.worksheet('項目_詳細情報')
-    master_table = master_sheet.get_all_values()
+    # get master table
+    print('#Log: スプレッドシートからマスタ情報取得中', end='...')
+    master_table = get_table(master_sheet_url, '項目_詳細情報')
+    print('完了')
     # get each column
     master = {
         'features': get_column(master_table, 0),
@@ -93,17 +110,7 @@ def get_all_items() -> Dict:
     # read input from json
     input_data = read_json(INPUT_PATH)
     # get master data from spreadsheet
-    while True:
-        try:
-            master = get_master(input_data['master_sheet_url'])
-        except google.auth.exceptions.TransportError as e:
-            print('#Error: [{}]{}'.format(type(e),e))
-            sleep(5)
-            print('#Retry: get master data from spreadsheet')
-            continue
-        else:
-            print('#Success: get master data from spreadsheet')
-            break
+    master = get_master(input_data['master_sheet_url'])
     # get each items
     boolean_items = get_boolean_items(master)
     data_items = get_data_items(master)
@@ -118,7 +125,7 @@ def get_all_items() -> Dict:
 
 # extract valid columns from product table
 def extract_valid_columns(target_row:List) -> Dict:
-    important_keys = {'JAN(変更不可)':'jan', '商品ID(変更不可)':'id', 'メーカー名(変更不可)':'maker', '商品名(変更不可)':'name', '参照URL(編集可能)':'source_url'}
+    important_keys = {'JAN(変更不可)':'jan', '商品ID(変更不可)':'id', 'メーカー名(変更不可)':'maker', '商品名(変更不可)':'name', '参照URL(編集可能)':'reference_url', '入力文(任意)':'input_text'}
     valid_columns = {}
     for idx, value in enumerate(target_row):
         if value.split(':')[-1] == '表示用':
@@ -145,11 +152,11 @@ def extract_product(valid_columns:Dict, target_row:List) -> Dict:
 def get_all_products() -> List:
     # read input from json
     input_data = read_json(INPUT_PATH)
-    # get product sheet
-    spreadsheet = get_spreadsheet(input_data['product_sheet_url'])
-    product_sheet = spreadsheet.worksheet('商品_詳細情報')
     # get all data of product sheet
-    product_table = product_sheet.get_all_values()
+    print('#Log: スプレッドシートから商品情報取得中', end='...')
+    product_table = get_table(input_data['product_sheet_url'], '商品_詳細情報')
+    print('完了')
+
     # extract valid columns
     valid_columns = extract_valid_columns(product_table[0])
     # get products list
@@ -159,18 +166,6 @@ def get_all_products() -> List:
         if product is not None:
             products.append(product)
     return products
-
-# TODO: delete this function
-def get_product_info() -> Tuple[str, str, str]:
-    # read input from json
-    input_data = read_json(INPUT_PATH)
-    # get product info
-    product_url = input_data['product_url']
-    model_number = input_data['model_number']
-    model_number = model_number if model_number != '' else None
-    input_text = input_data['input_text']
-    input_text = input_text if input_text != '' else None
-    return product_url, model_number, input_text
 
 def print_log(title:str, content:any) -> None:
     print('\n======= {} ======='.format(title))

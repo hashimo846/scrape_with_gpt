@@ -79,7 +79,7 @@ def str_prompts(item:str, input_texts:List[str]) -> List[str]:
     return prompts_list
 
 # 対象項目の情報を抽出
-def extract(split_inputs:List[str], model_number:str, items:List[Dict]) -> List[str]:
+def extract(split_inputs:List[str], product_name:str, items:List[Dict]) -> List[str]:
     answers = []
     for item in items:
         prompts = str_prompts(item, split_inputs)

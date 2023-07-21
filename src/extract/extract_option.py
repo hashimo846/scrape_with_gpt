@@ -3,9 +3,9 @@ from src import openai_handler
 from typing import List, Dict
 
 # プロンプト中の質問部分の文字列を返す
-def str_question(item:Dict, is_multi_prompt:bool) -> str:
+def str_question(product_name:str, item:Dict, is_multi_prompt:bool) -> str:
     text = '今から入力、選択肢、期待する出力形式を与えます。\n'
-    text += '入力のみを用いて、'
+    text += '入力のみを用いて、' + product_name + 'について、'
     text += item['name'] + 'を選択肢の中から複数選択し、出力形式に従ってJSONで出力してください。\n'
     text += 'もし選択肢の中に該当するものがない場合は、出力形式に従って空の文字列を出力してください。\n'
     text += 'また、選択肢にないものは出力に含めないでください。\n'
@@ -41,14 +41,14 @@ def str_input(input_text:str) -> str:
     return text
 
 # 生成したプロンプトのリスト返す
-def str_prompts(item:Dict, input_texts:List[str]) -> List[str]:
+def str_prompts(product_name:str, item:Dict, input_texts:List[str]) -> List[str]:
     is_multi_prompt = 1 < len(input_texts)
     prompts_list = []
     
     if is_multi_prompt:
         # first prompt
         prompt_text = '\n'.join([
-            str_question(item, is_multi_prompt), 
+            str_question(product_name, item, is_multi_prompt), 
             str_option(item),
             str_format(item), 
             str_input(input_texts[0]),
@@ -66,7 +66,7 @@ def str_prompts(item:Dict, input_texts:List[str]) -> List[str]:
     else:
         # only one prompt
         prompt_text = '\n'.join([
-            str_question(item, is_multi_prompt), 
+            str_question(product_name, item, is_multi_prompt), 
             str_option(item),
             str_format(item), 
             str_input(input_texts[0]),
@@ -76,10 +76,10 @@ def str_prompts(item:Dict, input_texts:List[str]) -> List[str]:
     return prompts_list
 
 # 対象項目の情報を抽出
-def extract(split_inputs:List[str], model_number:str, items:List[Dict]) -> List[str]:
+def extract(split_inputs:List[str], product_name:str, items:List[Dict]) -> List[str]:
     answers = []
     for item in items:
-        prompts = str_prompts(item, split_inputs)
+        prompts = str_prompts(product_name, item, split_inputs)
         openai_handler.authentication()
         answers.append(openai_handler.send(prompts))
     return answers
