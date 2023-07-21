@@ -33,7 +33,7 @@ GoogleのAPI設定から、サービスアカウント認証情報をJson形式�
 ```shell
 docker-compose up -d
 ```
-`requirements.txt`、`.env`、`Dockerfile`、`docker-compose.yml`を変更したときは、次のコマンドにより一度コンテナを削除してビルド。
+`requirements.txt`、`.env`、`Dockerfile`、`docker-compose.yml`を変更したときは、次のコマンドによりコンテナを再構築。
 ```shell
 docker-compose down
 docker-compose build --no-cache #少し時間がかかる
@@ -41,7 +41,7 @@ docker-compose up -d
 ```
 
 # スクリプトの実行方法
-仮想環境内はデフォルトで`/root`直下に移動しているので、次のコマンドで各スクリプトを実行できる。
+仮想環境内はデフォルトで`/root/`に移動しており、次のコマンドで各スクリプトを実行できる。
 ```shell
 docker-compose exec python3 python3 -m src.main
 ```
