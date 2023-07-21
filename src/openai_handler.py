@@ -22,8 +22,8 @@ def send(prompts:List[str]) -> str:
     while True:
         try:
             response = openai.ChatCompletion.create(model = MODEL,messages = messages)
-        except (openai.error.APIError, openai.error.ServiceUnavailableError, APIConnectionError) as e:
-            print('#Error: [{}}]{}'.format(type(e),e))
+        except (openai.error.APIError, openai.error.ServiceUnavailableError, openai.error.APIConnectionError) as e:
+            print('#Error: [{}]{}'.format(type(e),e))
             sleep(5)
             print('#Retry: send prompt')
             continue

@@ -11,6 +11,7 @@ def str_question(item:Dict, is_multi_prompt:bool) -> str:
     text += '入力のみを用いて、'
     text += '「' + item + '」に該当するかを調べ、その結果を選択肢の中から一つだけ選び、出力形式に従ってJSONで出力してください。\n'
     text += 'ただし、選択肢にないものは出力に含めないでください。\n'
+    text += 'また、入力に' + item + 'に関する記載がない場合は、「不明」を出力してください。\n'
     if is_multi_prompt:
         text += 'また、入力の文が長いのため、<end>というまで出力を生成しないでください。\n'
         text += '<end>というまでは<ok>とだけ返答してください。\n'

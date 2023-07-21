@@ -4,7 +4,7 @@ from src import scrape
 from src import summarize
 
 def print_log(title:str, content:str) -> None:
-    print('======= {} ======='.format(title))
+    print('\n======= {} ======='.format(title))
     print(content)
 
 # メインプロセス

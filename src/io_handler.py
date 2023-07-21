@@ -1,4 +1,5 @@
 from google.oauth2 import service_account
+import google.auth.exceptions
 import gspread
 import json
 import os
@@ -31,27 +32,23 @@ def get_spreadsheet(sheet_url:str) -> gspread.Spreadsheet:
     spreadsheet = gspread_client.open_by_url(sheet_url)
     return spreadsheet
 
+def get_column(table:List, idx:int) -> List:
+    return [row[idx] for row in table]
+
 # get master data from spreadsheet with url
-def get_master(master_url:str) -> Dict:
+def get_master(master_sheet_url:str) -> Dict:
     # get master sheet
-    spreadsheet = get_spreadsheet(master_url)
+    spreadsheet = get_spreadsheet(master_sheet_url)
     master_sheet = spreadsheet.worksheet('項目_詳細情報')
+    master_table = master_sheet.get_all_values()
     # get each column
     master = {
-        'features': [],
-        'descriptions': [],
-        'formats': [],
-        'units': [],
-        'filters': [],
+        'features': get_column(master_table, 0),
+        'descriptions': get_column(master_table, 1),
+        'formats': get_column(master_table, 2),
+        'units': get_column(master_table, 3),
+        'filters': get_column(master_table, 4),
     }
-    max_row = 0
-    for idx, key in enumerate(master):
-        master[key] = master_sheet.col_values(idx+1)[1:]
-        max_row = max(max_row, len(master[key]))
-    # padding empty cells
-    for idx, key in enumerate(master):
-        while len(master[key]) < max_row:
-            master[key].append('')
     return master
 
 # get boolean items from master data
@@ -98,9 +95,9 @@ def get_all_items() -> Dict:
     # get master data from spreadsheet
     while True:
         try:
-            master = get_master(input_data['master_url'])
+            master = get_master(input_data['master_sheet_url'])
         except google.auth.exceptions.TransportError as e:
-            print('#Error: [{}}]{}'.format(type(e),e))
+            print('#Error: [{}]{}'.format(type(e),e))
             sleep(5)
             print('#Retry: get master data from spreadsheet')
             continue
@@ -119,31 +116,62 @@ def get_all_items() -> Dict:
     }
     return items
 
-# get product info from input json
-def get_product_info() -> Tuple[str, str, str]:
+# extract valid columns from product table
+def extract_valid_columns(target_row:List) -> Dict:
+    important_keys = {'JAN(変更不可)':'jan', '商品ID(変更不可)':'id', 'メーカー名(変更不可)':'maker', '商品名(変更不可)':'name', '参照URL(編集可能)':'source_url'}
+    valid_columns = {}
+    for idx, value in enumerate(target_row):
+        if value.split(':')[-1] == '表示用':
+            continue
+        elif value.split(':')[-1] == '管理用':
+            key = ''.join(value.split(':')[:-1])
+        elif value in important_keys:
+            key = important_keys[value]
+        # valid_columns = {key:idx}
+        valid_columns[key] = idx
+    return valid_columns
+
+# extract product from target_row. if jan is not found, return None
+def extract_product(valid_columns:Dict, target_row:List) -> Dict:
+    product = dict()
+    for key in valid_columns.keys():
+        product[key] = target_row[valid_columns[key]]
+    if product['jan'] == '':
+        return None
+    else:
+        return product
+
+# get all products from product sheet
+def get_all_products() -> List:
     # read input from json
     input_data = read_json(INPUT_PATH)
-    product_url = input_data['product_url']
-    model_number = input_data['model_number'] if input_data['model_number'] != '' else None
-    input_text = input_data['input_text'] if input_data['input_text'] != '' else None
-    return product_url, model_number, input_text
+    # get product sheet
+    spreadsheet = get_spreadsheet(input_data['product_sheet_url'])
+    product_sheet = spreadsheet.worksheet('商品_詳細情報')
+    # get all data of product sheet
+    product_table = product_sheet.get_all_values()
+    # extract valid columns
+    valid_columns = extract_valid_columns(product_table[0])
+    # get products list
+    products = []
+    for target_row in product_table[1:]:
+        product = extract_product(valid_columns, target_row)
+        if product is not None:
+            products.append(product)
+    return products
+
+def print_log(title:str, content:any) -> None:
+    print('\n======= {} ======='.format(title))
+    print(content)
 
 def main():
-    # read input from json
-    input_data = read_json(INPUT_PATH)
-    # get master data from spreadsheet
-    master = get_master(input_data['master_url'])
-    # get each items
-    boolean_items = get_boolean_items(master)
-    data_items = get_data_items(master)
-    option_items = get_option_items(master)
-    print(boolean_items)
-    print('=====')
-    print(data_items)
-    print('=====')
-    print(option_items)
-    print('=====')
-    print()
+    items = get_all_items()
+    print_log('boolean_items', items['boolean_items'])
+    print_log('data_items',items['data_items'])
+    print_log('option_items', items['option_items'])
+    # get products
+    products = get_all_products()
+    print_log('products', products)
 
 if __name__ == '__main__':
     main()
