@@ -1,5 +1,5 @@
 from src.extract import extract_boolean, extract_data, extract_option
-from src import input_handler
+from src import io_handler
 from src import scrape
 from src import summarize
 
