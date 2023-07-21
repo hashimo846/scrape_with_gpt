@@ -100,12 +100,12 @@ def get_all_items() -> Dict:
         try:
             master = get_master(input_data['master_url'])
         except google.auth.exceptions.TransportError as e:
-            print('Error: [{}}]{}'.format(type(e),e))
+            print('#Error: [{}}]{}'.format(type(e),e))
             sleep(5)
-            print('Retry: get master data from spreadsheet')
+            print('#Retry: get master data from spreadsheet')
             continue
         else:
-            print('Success: get master data from spreadsheet')
+            print('#Success: get master data from spreadsheet')
             break
     # get each items
     boolean_items = get_boolean_items(master)
