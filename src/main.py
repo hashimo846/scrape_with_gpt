@@ -10,9 +10,9 @@ def print_log(title:str, content:str) -> None:
 # メインプロセス
 def main():
     # get product info from input json
-    product_url, model_number, input_text = input_handler.get_product_info()
+    product_url, model_number, input_text = io_handler.get_product_info()
     # get all items from master
-    items = input_handler.get_all_items()
+    items = io_handler.get_all_items()
     # scrape all text from product url
     full_text = scrape.scrape_all_text(url = product_url, input_text=input_text)
     print_log('full_text', full_text)

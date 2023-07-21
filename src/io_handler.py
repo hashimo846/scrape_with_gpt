@@ -96,7 +96,17 @@ def get_all_items() -> Dict:
     # read input from json
     input_data = read_json(INPUT_PATH)
     # get master data from spreadsheet
-    master = get_master(input_data['master_url'])
+    while True:
+        try:
+            master = get_master(input_data['master_url'])
+        except google.auth.exceptions.TransportError as e:
+            print('Error: [{}}]{}'.format(type(e),e))
+            sleep(5)
+            print('Retry: get master data from spreadsheet')
+            continue
+        else:
+            print('Success: get master data from spreadsheet')
+            break
     # get each items
     boolean_items = get_boolean_items(master)
     data_items = get_data_items(master)
