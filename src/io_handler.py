@@ -9,6 +9,8 @@ from typing import Dict, List, Tuple
 # constant
 INPUT_PATH = os.getenv('INPUT_PATH')
 GOOGLE_CREDENTIAL_PATH = os.getenv('GOOGLE_CREDENTIAL_PATH')
+MASTER_WORKSHEET = '項目_詳細情報'
+PRODUCT_WORKSHHET = '商品_詳細情報'
 
 # read json file with path
 def read_json(file_path:str) -> Dict:
@@ -53,10 +55,10 @@ def get_column(table:List, idx:int) -> List:
     return [row[idx] for row in table]
 
 # get master data from spreadsheet with url
-def get_master(master_sheet_url:str) -> Dict:
+def get_master(sheet_url:str) -> Dict:
     # get master table
     print('#Log: スプレッドシートからマスタ情報取得中', end='...')
-    master_table = get_table(master_sheet_url, '項目_詳細情報')
+    master_table = get_table(sheet_url, MASTER_WORKSHEET)
     print('完了')
     # get each column
     master = {
@@ -110,7 +112,7 @@ def get_all_items() -> Dict:
     # read input from json
     input_data = read_json(INPUT_PATH)
     # get master data from spreadsheet
-    master = get_master(input_data['master_sheet_url'])
+    master = get_master(input_data['sheet_url'])
     # get each items
     boolean_items = get_boolean_items(master)
     data_items = get_data_items(master)
@@ -154,7 +156,7 @@ def get_all_products() -> List:
     input_data = read_json(INPUT_PATH)
     # get all data of product sheet
     print('#Log: スプレッドシートから商品情報取得中', end='...')
-    product_table = get_table(input_data['product_sheet_url'], '商品_詳細情報')
+    product_table = get_table(input_data['sheet_url'], PRODUCT_WORKSHHET)
     print('完了')
 
     # extract valid columns
