@@ -13,7 +13,7 @@ MASTER_WORKSHEET = '項目_詳細情報'
 PRODUCT_WORKSHHET = '商品_詳細情報'
 
 # read json file with path
-def read_json(file_path:str) -> Dict:
+def read_json(file_path:str = INPUT_PATH) -> Dict:
     with open(file_path, 'r') as f:
         return json.load(f)
 
@@ -108,11 +108,9 @@ def get_option_items(master:Dict) -> List:
     return items
 
 # get all items from master
-def get_all_items() -> Dict:
-    # read input from json
-    input_data = read_json(INPUT_PATH)
+def get_all_items(sheet_url:str) -> Dict:
     # get master data from spreadsheet
-    master = get_master(input_data['sheet_url'])
+    master = get_master(sheet_url)
     # get each items
     boolean_items = get_boolean_items(master)
     data_items = get_data_items(master)
@@ -127,12 +125,12 @@ def get_all_items() -> Dict:
 
 # extract valid columns from product table
 def extract_valid_columns(target_row:List) -> Dict:
-    important_keys = {'JAN(変更不可)':'jan', 'メーカー名(変更不可)':'maker', '商品名(変更不可)':'name', '型番（変更不可）':'model_number', '参照URL(編集可能)':'reference_url', '実行ボタン':'execute_button'}
+    important_keys = {'JAN(変更不可)':'jan', 'メーカー名(変更不可)':'maker', '商品名(変更不可)':'name', '型番(変更不可)':'model_number', '参照URL(編集可能)':'reference_url', '実行ボタン':'execute_button'}
     valid_columns = {}
     for idx, value in enumerate(target_row):
         if value in important_keys:
             key = important_keys[value]
-        elif value.split(':')[-1] == '':
+        elif value == '':
             continue
         else:
             key = (value)
@@ -150,15 +148,23 @@ def extract_product(valid_columns:Dict, target_row:List) -> Dict:
     else:
         return product
 
+def get_product_table(sheet_url:str) -> List:
+    print('#Log: スプレッドシートから商品情報取得中', end='...')
+    product_table = get_table(sheet_url, PRODUCT_WORKSHHET)
+    print('完了')
+    return product_table
+
+def get_product(sheet_url:str, target_row_idx:int) -> Dict:
+    product_table = get_product_table(sheet_url)
+    valid_columns = extract_valid_columns(product_table[0])
+    product = extract_product(valid_columns, product_table[target_row_idx])
+    return product
+
 # get all products from product sheet
 def get_all_products() -> List:
     # read input from json
     input_data = read_json(INPUT_PATH)
-    # get all data of product sheet
-    print('#Log: スプレッドシートから商品情報取得中', end='...')
-    product_table = get_table(input_data['sheet_url'], PRODUCT_WORKSHHET)
-    print('完了')
-
+    
     # extract valid columns
     valid_columns = extract_valid_columns(product_table[0])
     # get products list
@@ -172,6 +178,9 @@ def get_all_products() -> List:
 def print_log(title:str, content:any) -> None:
     print('\n======= {} ======='.format(title))
     print(content)
+
+def output_data(product:Dict, valid_columns:Dict, data_answers:List) -> None:
+    pass
 
 def main():
     items = get_all_items()
