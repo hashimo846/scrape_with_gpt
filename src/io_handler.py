@@ -167,7 +167,7 @@ def get_all_products() -> List:
         product = extract_product(valid_columns, target_row)
         if product is not None:
             products.append(product)
-    return products
+    return products, valid_columns
 
 def print_log(title:str, content:any) -> None:
     print('\n======= {} ======='.format(title))

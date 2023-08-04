@@ -12,7 +12,7 @@ def main() -> None:
     # get all items from master
     items = io_handler.get_all_items()
     # get product info from input json
-    products = io_handler.get_all_products()
+    products, valid_columns = io_handler.get_all_products()
     # # sample
     # products = [
     #     {'jan':4974019179933, 'id':10, 'maker':'シャープ', 'name':'KI-RS40-W', 'reference_url':'https://kakaku.com/item/K0001468563/spec/#tab', 'input_text':None}
