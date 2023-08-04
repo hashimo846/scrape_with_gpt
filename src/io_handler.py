@@ -2,22 +2,27 @@ from google.oauth2 import service_account
 import google.auth.exceptions
 import gspread
 import json
+from logging import DEBUG, INFO
 import os
+from src import log
 from time import sleep
 from typing import Dict, List, Tuple
 
-# constant
+# ロガーの初期化
+logger = log.init(__name__, DEBUG)
+
+# パラメータ
 INPUT_PATH = os.getenv('INPUT_PATH')
 GOOGLE_CREDENTIAL_PATH = os.getenv('GOOGLE_CREDENTIAL_PATH')
 MASTER_WORKSHEET = '項目_詳細情報'
 PRODUCT_WORKSHHET = '商品_詳細情報'
 
-# read json file with path
+# Jsonファイルの読み込み
 def read_json(file_path:str = INPUT_PATH) -> Dict:
     with open(file_path, 'r') as f:
         return json.load(f)
 
-# autorize google spreadheet and google drive api
+# Google APIの認証
 def authorize_gspread(credential_path:str = GOOGLE_CREDENTIAL_PATH) -> gspread.Client:
     credentials =  service_account.Credentials.from_service_account_file(
         credential_path, 
@@ -29,13 +34,13 @@ def authorize_gspread(credential_path:str = GOOGLE_CREDENTIAL_PATH) -> gspread.C
     gspread_client = gspread.authorize(credentials)
     return gspread_client
 
-# get spreadsheet with url
+# URLからスプレッドシートを取得
 def get_spreadsheet(sheet_url:str) -> gspread.Spreadsheet:
     gspread_client = authorize_gspread()
     spreadsheet = gspread_client.open_by_url(sheet_url)
     return spreadsheet
 
-# get all values from worksheet in spreadsheet
+# URLとシート名からテーブルを取得（List）
 def get_table(sheet_url:str, worksheet_name:str) -> List:
     while True:
         try:
@@ -43,23 +48,23 @@ def get_table(sheet_url:str, worksheet_name:str) -> List:
             worksheet = spreadsheet.worksheet(worksheet_name)
             table = worksheet.get_all_values()
         except google.auth.exceptions.TransportError as e:
-            print('#Error: [{}]{}'.format(type(e),e))
+            logger.error(log.format('スプレッドシート取得失敗', e))
             sleep(1)
-            print('#Retry: スプレッドシートからテーブル再取得中', end='...')
+            logger.info('スプレッドシートからテーブル再取得中')
             continue
         else:
             break
     return table
 
+# 指定した列の全データをテーブルから取得
 def get_column(table:List, idx:int) -> List:
     return [row[idx] for row in table]
 
-# get master data from spreadsheet with url
+# スプレッドシートのURLからマスタ情報を取得
 def get_master(sheet_url:str) -> Dict:
     # get master table
-    print('#Log: スプレッドシートからマスタ情報取得中', end='...')
+    logger.info('スプレッドシートからマスタ情報取得中')
     master_table = get_table(sheet_url, MASTER_WORKSHEET)
-    print('完了')
     # get each column
     master = {
         'features': get_column(master_table, 0),
@@ -70,7 +75,7 @@ def get_master(sheet_url:str) -> Dict:
     }
     return master
 
-# get boolean items from master data
+# マスタ情報から二値項目を取得
 def get_boolean_items(master:Dict) -> List:
     items, i = [], 0
     while i < len(master['formats']):
@@ -79,7 +84,7 @@ def get_boolean_items(master:Dict) -> List:
         i += 1
     return items
 
-# get data items from master data
+# マスタ情報からデータ項目を取得
 def get_data_items(master:Dict) -> List:
     items, i = [], 0
     while i < len(master['formats']):
@@ -91,7 +96,7 @@ def get_data_items(master:Dict) -> List:
         i += 1
     return items
 
-# get option items from master data
+# マスタ情報から選択項目を取得
 def get_option_items(master:Dict) -> List:
     items, i = [], 0
     while i < len(master['formats']):
@@ -107,8 +112,8 @@ def get_option_items(master:Dict) -> List:
             i += 1
     return items
 
-# get all items from master
-def get_all_items(sheet_url:str) -> Dict:
+# スプレッドシートからマスタ情報の全項目を取得
+def get_master_items(sheet_url:str) -> Dict:
     # get master data from spreadsheet
     master = get_master(sheet_url)
     # get each items
@@ -116,12 +121,12 @@ def get_all_items(sheet_url:str) -> Dict:
     data_items = get_data_items(master)
     option_items = get_option_items(master)
     # to dict
-    items = {
-        'boolean_items':boolean_items, 
-        'data_items':data_items,
-        'option_items':option_items,
+    master_items = {
+        'boolean':boolean_items, 
+        'data':data_items,
+        'option':option_items,
     }
-    return items
+    return master_items
 
 # extract valid columns from product table
 def extract_valid_columns(target_row:List) -> Dict:
@@ -138,8 +143,16 @@ def extract_valid_columns(target_row:List) -> Dict:
         valid_columns[key] = idx
     return valid_columns
 
-# extract product from target_row. if jan is not found, return None
-def extract_product(valid_columns:Dict, target_row:List) -> Dict:
+def get_product_table(sheet_url:str) -> List:
+    logger.info('スプレッドシートから商品情報取得中')
+    product_table = get_table(sheet_url, PRODUCT_WORKSHHET)
+    return product_table
+
+# 商品情報を取得（janが空の場合はNoneを返す）
+def get_product(sheet_url:str, target_row_idx:int) -> Dict:
+    product_table = get_product_table(sheet_url)
+    valid_columns = extract_valid_columns(product_table[0])
+    target_row = product_table[target_row_idx]
     product = dict()
     for key in valid_columns.keys():
         product[key] = target_row[valid_columns[key]]
@@ -147,18 +160,6 @@ def extract_product(valid_columns:Dict, target_row:List) -> Dict:
         return None
     else:
         return product
-
-def get_product_table(sheet_url:str) -> List:
-    print('#Log: スプレッドシートから商品情報取得中', end='...')
-    product_table = get_table(sheet_url, PRODUCT_WORKSHHET)
-    print('完了')
-    return product_table
-
-def get_product(sheet_url:str, target_row_idx:int) -> Dict:
-    product_table = get_product_table(sheet_url)
-    valid_columns = extract_valid_columns(product_table[0])
-    product = extract_product(valid_columns, product_table[target_row_idx])
-    return product
 
 # get all products from product sheet
 def get_all_products() -> List:
@@ -174,10 +175,6 @@ def get_all_products() -> List:
         if product is not None:
             products.append(product)
     return products, valid_columns
-
-def print_log(title:str, content:any) -> None:
-    print('\n======= {} ======='.format(title))
-    print(content)
 
 def output_data(product:Dict, valid_columns:Dict, data_answers:List) -> None:
     pass

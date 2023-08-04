@@ -1,7 +1,12 @@
+from logging import DEBUG, INFO
+from src import log
 import openai
 import os
 from time import sleep
 from typing import List
+
+# ロガーの初期化
+logger = log.init(__name__, DEBUG)
 
 #使用するAIモデル
 MODEL = os.getenv("OPENAI_MODEL")
@@ -22,15 +27,11 @@ def send(prompts:List[str]) -> str:
     while True:
         try:
             response = openai.ChatCompletion.create(model = MODEL,messages = messages, timeout = 10)
-        except (openai.error.APIError, openai.error.ServiceUnavailableError, openai.error.APIConnectionError) as e:
-            print('#Error: [{}]{}'.format(type(e),e))
-            sleep(1)
-            print('#Retry: プロンプト再送信中')
-            continue
         except Exception as e:
-            print('#Error: [{}]{}'.format(type(e),e))
+            logger.error(log.format('プロンプト送信失敗', e))
             sleep(1)
-            print('#Retry: プロンプト再送信中')
+            logger.info('プロンプト再送信中')
+            continue
         else:
             break
     return response.choices[0]['message']['content'].strip()
