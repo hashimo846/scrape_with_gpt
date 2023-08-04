@@ -3,6 +3,7 @@ from langchain.text_splitter import TokenTextSplitter
 import openai
 import os
 import requests
+from src import openai_handler
 from typing import List, Dict
 
 # 1プロンプトに含むトークン数の上限
@@ -59,8 +60,8 @@ def summarize(input_text:str, model_number:str = None) -> str:
     # GPTに入力用のプロンプトを作成
     scrape_prompts = [str_template(model_number).format(text) for text in split_texts]
     # GPTの回答を取得
-    authentication_openai()
-    extract_texts = [send_prompt(prompt) for prompt in scrape_prompts]
+    extract_texts = [openai_handler.send([prompt]) for prompt in scrape_prompts]
+    #extract_texts = [send_prompt(prompt) for prompt in scrape_prompts]
     # 回答を結合
     extract_text = '\n'.join(extract_texts)
     return extract_text

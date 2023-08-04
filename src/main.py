@@ -8,18 +8,19 @@ def print_log(title:str, content:str) -> None:
     print(content)
 
 # メインプロセス
-def main():
+def main() -> None:
     # get all items from master
     items = io_handler.get_all_items()
     # get product info from input json
     products = io_handler.get_all_products()
-    # sample
-    products = [
-        {'jan':4974019179933, 'id':10, 'maker':'シャープ', 'name':'KI-RS40-W', 'reference_url':'https://kakaku.com/item/K0001468563/spec/#tab', 'input_text':None}
-    ]
+    # # sample
+    # products = [
+    #     {'jan':4974019179933, 'id':10, 'maker':'シャープ', 'name':'KI-RS40-W', 'reference_url':'https://kakaku.com/item/K0001468563/spec/#tab', 'input_text':None}
+    # ]
     for product in products:
         # scrape all text from product url
-        full_text = scrape.scrape_all_text(url = product['reference_url'], input_text=product['input_text'])
+        print_log('商品情報', product)
+        full_text = scrape.scrape_all_text(url = product['reference_url'], input_text=None)
         print_log('Webページから取得した全文', full_text)
         # summarize text
         summarize_text = summarize.summarize(input_text = full_text)
@@ -33,6 +34,6 @@ def main():
         print_log('Boolean項目の抽出結果', boolean_answers)
         option_answers = extract_option.extract(split_inputs = split_inputs, product_name = product['name'], items = items['option_items'])
         print_log('複数選択項目の抽出結果', option_answers)
-
+        
 if __name__ == '__main__':
     main()

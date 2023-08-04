@@ -127,15 +127,15 @@ def get_all_items() -> Dict:
 
 # extract valid columns from product table
 def extract_valid_columns(target_row:List) -> Dict:
-    important_keys = {'JAN(変更不可)':'jan', '商品ID(変更不可)':'id', 'メーカー名(変更不可)':'maker', '商品名(変更不可)':'name', '参照URL(編集可能)':'reference_url', '入力文(任意)':'input_text'}
+    important_keys = {'JAN(変更不可)':'jan', 'メーカー名(変更不可)':'maker', '商品名(変更不可)':'name', '型番（変更不可）':'model_number', '参照URL(編集可能)':'reference_url', '実行ボタン':'execute_button'}
     valid_columns = {}
     for idx, value in enumerate(target_row):
-        if value.split(':')[-1] == '表示用':
-            continue
-        elif value.split(':')[-1] == '管理用':
-            key = ''.join(value.split(':')[:-1])
-        elif value in important_keys:
+        if value in important_keys:
             key = important_keys[value]
+        elif value.split(':')[-1] == '':
+            continue
+        else:
+            key = (value)
         # valid_columns = {key:idx}
         valid_columns[key] = idx
     return valid_columns
