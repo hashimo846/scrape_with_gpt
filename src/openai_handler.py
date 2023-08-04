@@ -30,7 +30,7 @@ def send(prompts:List[str]) -> str:
         except Exception as e:
             logger.error(log.format('プロンプト送信失敗', e))
             sleep(1)
-            logger.info('プロンプト再送信中')
+            logger.info(log.format('プロンプト再送信中'))
             continue
         else:
             break

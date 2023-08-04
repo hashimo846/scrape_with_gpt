@@ -50,7 +50,7 @@ def get_table(sheet_url:str, worksheet_name:str) -> List:
         except google.auth.exceptions.TransportError as e:
             logger.error(log.format('スプレッドシート取得失敗', e))
             sleep(1)
-            logger.info('スプレッドシートからテーブル再取得中')
+            logger.info(log.format('スプレッドシートからテーブル再取得中'))
             continue
         else:
             break
@@ -63,7 +63,7 @@ def get_column(table:List, idx:int) -> List:
 # スプレッドシートのURLからマスタ情報を取得
 def get_master(sheet_url:str) -> Dict:
     # get master table
-    logger.info('スプレッドシートからマスタ情報取得中')
+    logger.info(log.format('スプレッドシートからマスタ情報取得中'))
     master_table = get_table(sheet_url, MASTER_WORKSHEET)
     # get each column
     master = {
@@ -144,7 +144,7 @@ def extract_valid_columns(target_row:List) -> Dict:
     return valid_columns
 
 def get_product_table(sheet_url:str) -> List:
-    logger.info('スプレッドシートから商品情報取得中')
+    logger.info(log.format('スプレッドシートから商品情報取得中'))
     product_table = get_table(sheet_url, PRODUCT_WORKSHHET)
     return product_table
 
