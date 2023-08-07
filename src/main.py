@@ -31,7 +31,7 @@ def main() -> None:
     # 要約文を分割
     split_inputs = summarize.split_input(input_text = summarize_text)
 
-    #  要約文から各項目を抽出
+    # 要約文から各項目を抽出
     data_answers = extract_data.extract(split_inputs = split_inputs, product_name = product['name'], items = master_items['data'])
     logger.debug(log.format('データ項目の抽出結果', data_answers))
     boolean_answers = extract_boolean.extract(split_inputs = split_inputs, product_name = product['name'], items = master_items['boolean'])
