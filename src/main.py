@@ -17,13 +17,19 @@ def main() -> None:
 
     # マスタ情報を取得
     master_items = io_handler.get_master_items(sheet_url)
+    if master_items == None: return
+    logger.debug(log.format('マスタ情報', master_items))
+
+    # 商品情報を取得
     product = io_handler.get_product(sheet_url, target_row_idx)
+    if product == None: return
     logger.debug(log.format('商品情報', product))
 
     # URLからページの全文を取得
     full_text = scrape.scrape_all_text(url = product['reference_url'], input_text=None)
     logger.debug(log.format('Webページから取得した全文', full_text))
-
+    if full_text == None: return
+    
     # 全文から要約文を取得
     summarize_text = summarize.summarize(input_text = full_text)
     logger.debug(log.format('要約文', summarize_text))

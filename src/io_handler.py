@@ -75,6 +75,7 @@ def get_master(sheet_url:str) -> Dict:
         'filters': get_column(master_table, 4),
     }
     return master
+    
 
 # マスタ情報から二値項目を取得
 def get_boolean_items(master:Dict) -> List:
@@ -115,19 +116,23 @@ def get_option_items(master:Dict) -> List:
 
 # スプレッドシートからマスタ情報の全項目を取得
 def get_master_items(sheet_url:str) -> Dict:
-    # get master data from spreadsheet
-    master = get_master(sheet_url)
-    # get each items
-    boolean_items = get_boolean_items(master)
-    data_items = get_data_items(master)
-    option_items = get_option_items(master)
-    # to dict
-    master_items = {
-        'boolean':boolean_items, 
-        'data':data_items,
-        'option':option_items,
-    }
-    return master_items
+    try:
+        # get master data from spreadsheet
+        master = get_master(sheet_url)
+        # get each items
+        boolean_items = get_boolean_items(master)
+        data_items = get_data_items(master)
+        option_items = get_option_items(master)
+        # to dict
+        master_items = {
+            'boolean':boolean_items, 
+            'data':data_items,
+            'option':option_items,
+        }
+        return master_items
+    except Exception as e:
+        logger.error(log.format('マスタ情報取得失敗', e))
+        return None
 
 # extract valid columns from product table
 def extract_valid_columns(target_row:List) -> Dict:
@@ -151,16 +156,20 @@ def get_product_table(sheet_url:str) -> List:
 
 # 商品情報を取得（janが空の場合はNoneを返す）
 def get_product(sheet_url:str, target_row_idx:int) -> Dict:
-    product_table = get_product_table(sheet_url)
-    valid_columns = extract_valid_columns(product_table[0])
-    target_row = product_table[target_row_idx]
-    product = dict()
-    for key in valid_columns.keys():
-        product[key] = target_row[valid_columns[key]]
-    if product['jan'] == '':
+    try:
+        product_table = get_product_table(sheet_url)
+        valid_columns = extract_valid_columns(product_table[0])
+        target_row = product_table[target_row_idx]
+        product = dict()
+        for key in valid_columns.keys():
+            product[key] = target_row[valid_columns[key]]
+        if product['jan'] == '':
+            return None
+        else:
+            return product
+    except Exception as e:
+        logger.error(log.format('商品情報取得失敗', e))
         return None
-    else:
-        return product
 
 # get all products from product sheet
 def get_all_products() -> List:
