@@ -32,13 +32,16 @@ def main() -> None:
     split_inputs = summarize.split_input(input_text = summarize_text)
 
     # 要約文から各項目を抽出
-    data_answers = extract_data.extract(split_inputs = split_inputs, product_name = product['name'], items = master_items['data'])
-    logger.debug(log.format('データ項目の抽出結果', data_answers))
-    boolean_answers = extract_boolean.extract(split_inputs = split_inputs, product_name = product['name'], items = master_items['boolean'])
-    logger.debug(log.format('Boolean項目の抽出結果', boolean_answers))
-    option_answers = extract_option.extract(split_inputs = split_inputs, product_name = product['name'], items = master_items['option'])
-    logger.debug(log.format('複数選択項目の抽出結果', option_answers))
+    answers = dict()
+    answers['data'] = extract_data.extract(split_inputs = split_inputs, product_name = product['name'], items = master_items['data'])
+    logger.debug(log.format('データ項目の抽出結果', answers['data']))
+    answers['boolean'] = extract_boolean.extract(split_inputs = split_inputs, product_name = product['name'], items = master_items['boolean'])
+    logger.debug(log.format('Boolean項目の抽出結果', answers['boolean']))
+    answers['option'] = extract_option.extract(split_inputs = split_inputs, product_name = product['name'], items = master_items['option'])
+    logger.debug(log.format('複数選択項目の抽出結果', answers['option']))
 
+    # 各回答を出力
+    io_handler.output_answers(sheet_url, target_row_idx, answers)
         
 if __name__ == '__main__':
     main()

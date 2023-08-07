@@ -16,6 +16,7 @@ INPUT_PATH = os.getenv('INPUT_PATH')
 GOOGLE_CREDENTIAL_PATH = os.getenv('GOOGLE_CREDENTIAL_PATH')
 MASTER_WORKSHEET = '項目_詳細情報'
 PRODUCT_WORKSHHET = '商品_詳細情報'
+OUTPUT_COLUMN = 7
 
 # Jsonファイルの読み込み
 def read_json(file_path:str = INPUT_PATH) -> Dict:
@@ -176,17 +177,54 @@ def get_all_products() -> List:
             products.append(product)
     return products, valid_columns
 
-def output_data(product:Dict, valid_columns:Dict, data_answers:List) -> None:
-    pass
+# set values
+def set_answers(sheet_url:str, target_row_idx, values) -> None:
+    while True:
+        try:
+            spreadsheet = get_spreadsheet(sheet_url)
+            worksheet = spreadsheet.worksheet(PRODUCT_WORKSHHET)
+            values_size = len(values[0])
+            start_cell = gspread.utils.rowcol_to_a1(target_row_idx+1, OUTPUT_COLUMN)
+            end_cell = gspread.utils.rowcol_to_a1(target_row_idx+1, OUTPUT_COLUMN+values_size-1)
+            worksheet.update('{}:{}'.format(start_cell, end_cell), values)
+            '''spreadのバージョン6になると、引数の順番が逆になる
+            UserWarning: [Deprecated][in version 6.0.0]: method signature will change to: 'Worksheet.update(value = [[]], range_name=)' arguments 'range_name' and 'values' will swap, values will be mandatory of type: 'list(list(...))'
+            '''
+        except Exception as e:
+            logger.error(log.format('スプレッドシートへの書き出し失敗', e))
+            sleep(1)
+            logger.info(log.format('スプレッドシートへ再書き出し中'))
+            break
+        else:
+            break
+
+# 出力先のカラムのヘッダとインデックスを取得
+def get_output_columns(sheet_url:str) -> Dict:
+    table = get_product_table(sheet_url)
+    output_header = table[0][OUTPUT_COLUMN-1:]
+    output_columns = dict()
+    for i in range(len(output_header)):
+        output_columns[output_header[i]] = i
+    return output_columns, len(output_header)
+
+def output_answers(sheet_url:str, target_row_idx:int, answers:Dict) -> None :
+    output_columns, output_size = get_output_columns(sheet_url)
+    # make output data
+    outputs = ['' for i in range(output_size)]
+    # for data items
+    for key in answers['data'].keys():
+        outputs[output_columns[key]] = str(answers['data'][key])
+    # for boolean items
+    for key in answers['boolean'].keys():
+        outputs[output_columns[key]] = str(answers['boolean'][key])
+    # for option items
+    for key in answers['option'].keys():
+        outputs[output_columns[key]] = ', '.join(answers['option'][key])
+    # set values
+    set_answers(sheet_url, target_row_idx, [outputs])
 
 def main():
-    items = get_all_items()
-    print_log('boolean_items', items['boolean_items'])
-    print_log('data_items',items['data_items'])
-    print_log('option_items', items['option_items'])
-    # get products
-    products = get_all_products()
-    print_log('products', products)
+    pass
 
 if __name__ == '__main__':
     main()
