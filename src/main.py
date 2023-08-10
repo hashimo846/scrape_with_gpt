@@ -1,9 +1,6 @@
 from logging import DEBUG, INFO
 from src.extract import extract_boolean, extract_data, extract_option
-from src import io_handler
-from src import scrape
-from src import summarize
-from src import log
+from src import io_handler, scrape, summarize, log
 
 # ロガーの初期化
 logger = log.init(__name__, DEBUG)
@@ -12,7 +9,7 @@ logger = log.init(__name__, DEBUG)
 def main() -> None:
     # 入力を取得
     target_row_idx = 2
-    sheet_url = io_handler.read_json()['sheet_url']
+    sheet_url = 'https://docs.google.com/spreadsheets/d/1l5Vo_Yz7Gh_s3M-2tDq-wnWLdAkD0rKylxw9IKYQ7M8/edit?usp=sharing'
     logger.debug(log.format('入力情報', 'ターゲット行:{}\nスプレッドシートURL:{}'.format(target_row_idx, sheet_url)))
 
     # マスタ情報を取得

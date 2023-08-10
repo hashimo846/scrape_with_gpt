@@ -2,8 +2,7 @@ import json
 from langchain.text_splitter import TokenTextSplitter
 from logging import DEBUG, INFO
 from src.extract.extract_json import extract_json
-from src import openai_handler
-from src import log
+from src import openai_handler, log
 from typing import List, Dict
 
 # ロガーの初期化

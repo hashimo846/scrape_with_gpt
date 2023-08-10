@@ -12,14 +12,13 @@ from typing import Dict, List, Tuple
 logger = log.init(__name__, DEBUG)
 
 # パラメータ
-INPUT_PATH = os.getenv('INPUT_PATH')
 GOOGLE_CREDENTIAL_PATH = os.getenv('GOOGLE_CREDENTIAL_PATH')
 MASTER_WORKSHEET = '項目_詳細情報'
 PRODUCT_WORKSHHET = '商品_詳細情報'
 OUTPUT_COLUMN = 7
 
 # Jsonファイルの読み込み
-def read_json(file_path:str = INPUT_PATH) -> Dict:
+def read_json(file_path:str) -> Dict:
     with open(file_path, 'r') as f:
         return json.load(f)
 
