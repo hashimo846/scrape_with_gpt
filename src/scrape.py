@@ -33,7 +33,7 @@ def scrape_all_text(url:str = None, input_text:str = None) -> str:
     return text
 
 def main():
-    url = 'https://amzn.asia/d/4HDaaqV'
+    url = 'https://store.acer.com/ja-jp/ap551-50w'
     text = scrape_all_text(url)
     print(text)
 
